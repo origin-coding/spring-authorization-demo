@@ -2,6 +2,7 @@ package com.origincoding.authorization.converter
 
 import com.origincoding.authorization.domain.dto.RedisOAuth2AuthorizationCodeGrantAuthorization
 import com.origincoding.authorization.domain.dto.RedisOAuth2AuthorizationGrantAuthorization
+import com.origincoding.authorization.domain.dto.RedisOAuth2ClientCredentialsGrantAuthorization
 import com.origincoding.authorization.domain.dto.RedisOidcAuthorizationCodeGrantAuthorization
 import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.security.oauth2.core.OAuth2AccessToken
@@ -26,6 +27,8 @@ fun OAuth2Authorization.toRedisOAuth2AuthorizationGrantAuthorization(): RedisOAu
             this.toRedisOidcAuthorizationCodeGrantAuthorization()
         else
             this.toRedisOAuth2AuthorizationCodeGrantAuthorization()
+    } else if (AuthorizationGrantType.CLIENT_CREDENTIALS == this.authorizationGrantType) {
+        return this.toRedisOAuth2ClientCredentialsGrantAuthorization()
     }
 
     throw IllegalArgumentException("Unsupported authorization grant type: ${this.authorizationGrantType}")
@@ -67,6 +70,20 @@ fun OAuth2Authorization.toRedisOidcAuthorizationCodeGrantAuthorization(): RedisO
         authorizationCode!!,
         this.getAttribute(OAuth2ParameterNames.STATE),
         this.extractIdToken()
+    )
+}
+
+fun OAuth2Authorization.toRedisOAuth2ClientCredentialsGrantAuthorization(): RedisOAuth2ClientCredentialsGrantAuthorization {
+    val accessToken = this.extractAccessToken()
+    val refreshToken = this.extractRefreshToken()
+
+    return RedisOAuth2ClientCredentialsGrantAuthorization(
+        this.id,
+        this.registeredClientId,
+        this.principalName,
+        this.authorizedScopes,
+        accessToken,
+        refreshToken
     )
 }
 
@@ -122,10 +139,18 @@ fun mapOAuth2AuthorizationGrantAuthorization(
     authorizationGrantAuthorization: RedisOAuth2AuthorizationGrantAuthorization,
     builder: Builder
 ) {
-    if (authorizationGrantAuthorization is RedisOidcAuthorizationCodeGrantAuthorization) {
-        mapOidcAuthorizationCodeGrantAuthorization(authorizationGrantAuthorization, builder)
-    } else if (authorizationGrantAuthorization is RedisOAuth2AuthorizationCodeGrantAuthorization) {
-        mapOAuth2AuthorizationCodeGrantAuthorization(authorizationGrantAuthorization, builder)
+    when (authorizationGrantAuthorization) {
+        is RedisOidcAuthorizationCodeGrantAuthorization -> {
+            mapOidcAuthorizationCodeGrantAuthorization(authorizationGrantAuthorization, builder)
+        }
+
+        is RedisOAuth2AuthorizationCodeGrantAuthorization -> {
+            mapOAuth2AuthorizationCodeGrantAuthorization(authorizationGrantAuthorization, builder)
+        }
+
+        is RedisOAuth2ClientCredentialsGrantAuthorization -> {
+            mapOAuth2ClientCredentialsGrantAuthorization(authorizationGrantAuthorization, builder)
+        }
     }
 }
 
@@ -229,4 +254,16 @@ fun mapIdToken(idToken: RedisOidcAuthorizationCodeGrantAuthorization.IdToken?, b
         metadata[OAuth2Authorization.Token.INVALIDATED_METADATA_NAME] = idToken.invalidated
         metadata[OAuth2Authorization.Token.CLAIMS_METADATA_NAME] = idToken.claims.getClaims()
     }
+}
+
+fun mapOAuth2ClientCredentialsGrantAuthorization(
+    clientCredentialsGrantAuthorization: RedisOAuth2ClientCredentialsGrantAuthorization,
+    builder: Builder
+) {
+    builder.id(clientCredentialsGrantAuthorization.id)
+        .principalName(clientCredentialsGrantAuthorization.principalName)
+        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+        .authorizedScopes(clientCredentialsGrantAuthorization.authorizedScopes)
+
+    mapAccessToken(clientCredentialsGrantAuthorization.accessToken, builder)
 }
