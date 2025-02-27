@@ -9,7 +9,7 @@ open class RedisOAuth2AuthorizationCodeGrantAuthorization(
     id: String,
     registeredClientId: String,
     principalName: String,
-    authorizedScopes: Set<String>,
+    authorizedScopes: Set<String>?,
     accessToken: AccessToken?,
     refreshToken: RefreshToken?,
     open val principal: Principal,

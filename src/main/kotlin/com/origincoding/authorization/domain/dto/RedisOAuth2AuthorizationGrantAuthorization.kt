@@ -13,7 +13,7 @@ open class RedisOAuth2AuthorizationGrantAuthorization(
     val id: String,
     val registeredClientId: String,
     val principalName: String,
-    val authorizedScopes: Set<String>,
+    val authorizedScopes: Set<String>?,
     val accessToken: AccessToken?,
     val refreshToken: RefreshToken?
 ) {

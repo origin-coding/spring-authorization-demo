@@ -8,12 +8,12 @@ open class RedisOidcAuthorizationCodeGrantAuthorization(
     id: String,
     registeredClientId: String,
     principalName: String,
-    authorizedScopes: Set<String>,
+    authorizedScopes: Set<String>?,
     accessToken: AccessToken?,
     refreshToken: RefreshToken?,
     principal: Principal,
     authorizationRequest: OAuth2AuthorizationRequest,
-    authorizationCode: AuthorizationCode,
+    authorizationCode: AuthorizationCode?,
     state: String?,
     val idToken: IdToken?
 ) : RedisOAuth2AuthorizationCodeGrantAuthorization(

@@ -67,7 +67,7 @@ fun OAuth2Authorization.toRedisOidcAuthorizationCodeGrantAuthorization(): RedisO
         refreshToken,
         this.getAttribute(Principal::class.java.name)!!,
         this.getAttribute(OAuth2AuthorizationRequest::class.java.name)!!,
-        authorizationCode!!,
+        authorizationCode,
         this.getAttribute(OAuth2ParameterNames.STATE),
         this.extractIdToken()
     )
@@ -177,15 +177,19 @@ fun mapOAuth2AuthorizationCodeGrantAuthorization(
         builder.attribute(OAuth2ParameterNames.STATE, authorizationGrantAuthorization.state)
     }
 
-    mapAuthorizationCode(authorizationGrantAuthorization.authorizationCode!!, builder)
+    mapAuthorizationCode(authorizationGrantAuthorization.authorizationCode, builder)
     mapAccessToken(authorizationGrantAuthorization.accessToken, builder)
     mapRefreshToken(authorizationGrantAuthorization.refreshToken, builder)
 }
 
 fun mapAuthorizationCode(
-    authorizationCode: RedisOAuth2AuthorizationCodeGrantAuthorization.AuthorizationCode,
+    authorizationCode: RedisOAuth2AuthorizationCodeGrantAuthorization.AuthorizationCode?,
     builder: Builder
 ) {
+    if (authorizationCode == null) {
+        return
+    }
+
     val oauth2AuthorizationCode = OAuth2AuthorizationCode(
         authorizationCode.tokenValue,
         authorizationCode.issuedAt,
