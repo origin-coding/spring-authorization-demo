@@ -1,48 +1,55 @@
 package com.origincoding.authorization.config
 
-import com.nimbusds.jose.jwk.JWKSet
-import com.nimbusds.jose.jwk.RSAKey
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet
-import com.nimbusds.jose.jwk.source.JWKSource
-import com.nimbusds.jose.proc.SecurityContext
+import com.origincoding.authorization.config.converter.PasswordGrantAuthorizationConverter
+import com.origincoding.authorization.config.provider.PasswordGrantAuthenticationProvider
+import com.origincoding.authorization.service.RedisOAuth2AuthorizationService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.annotation.Order
 import org.springframework.http.MediaType
 import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.core.authority.AuthorityUtils
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
+import org.springframework.security.oauth2.server.authorization.token.*
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher
-import java.security.KeyPair
-import java.security.KeyPairGenerator
-import java.security.interfaces.RSAPrivateKey
-import java.security.interfaces.RSAPublicKey
 import java.util.*
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 
 @ExperimentalUuidApi
 @Configuration
-class AuthenticationConfig {
+class AuthenticationConfig(
+    private val tokenGenerator: OAuth2TokenGenerator<*>,
+    private val authorizationService: RedisOAuth2AuthorizationService
+) {
     @Bean
     @Order(1)
     fun authorizationServerSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
         val authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer.authorizationServer()
 
         http.securityMatcher(authorizationServerConfigurer.endpointsMatcher)
-            .with(authorizationServerConfigurer) {
-                it.oidc(Customizer.withDefaults())
+            .with(authorizationServerConfigurer) { configurer ->
+                configurer.oidc(Customizer.withDefaults())
+                configurer.tokenEndpoint {
+                    it.accessTokenRequestConverter(PasswordGrantAuthorizationConverter())
+                    it.authenticationProvider(
+                        PasswordGrantAuthenticationProvider(
+                            userDetailsService(),
+                            passwordEncoder(),
+                            tokenGenerator,
+                            authorizationService
+                        )
+                    )
+                }
             }
             .authorizeHttpRequests { it.anyRequest().authenticated() }
             .exceptionHandling {
@@ -66,34 +73,17 @@ class AuthenticationConfig {
 
     @Bean
     fun userDetailsService(): UserDetailsService {
-        return InMemoryUserDetailsManager(User("user", passwordEncoder().encode("password"), emptyList()))
+        return InMemoryUserDetailsManager(
+            User(
+                "user",
+                passwordEncoder().encode("password"),
+                AuthorityUtils.createAuthorityList("ROLE_USER", "test_authority")
+            )
+        )
     }
 
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
-
-    @Bean
-    fun jwtSource(): JWKSource<SecurityContext> {
-        val keyPair = generateRsaKey()
-        val publicKey = keyPair.public as RSAPublicKey
-        val privateKey = keyPair.private as RSAPrivateKey
-        val rsaKey = RSAKey.Builder(publicKey)
-            .privateKey(privateKey)
-            .keyID(Uuid.random().toString())
-            .build()
-        return ImmutableJWKSet(JWKSet(rsaKey))
-    }
-
-    private fun generateRsaKey(): KeyPair {
-        val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
-        keyPairGenerator.initialize(2048)
-        return keyPairGenerator.generateKeyPair()
-    }
-
-    @Bean
-    fun jwtDecoder(jwkSource: JWKSource<SecurityContext>): JwtDecoder {
-        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource)
-    }
 
     @Bean
     fun authorizationServerSettings(): AuthorizationServerSettings {

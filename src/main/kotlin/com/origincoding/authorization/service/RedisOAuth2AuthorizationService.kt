@@ -2,7 +2,7 @@ package com.origincoding.authorization.service
 
 import com.origincoding.authorization.converter.mapOAuth2AuthorizationGrantAuthorization
 import com.origincoding.authorization.converter.toRedisOAuth2AuthorizationGrantAuthorization
-import com.origincoding.authorization.domain.dto.RedisOAuth2AuthorizationGrantAuthorization
+import com.origincoding.authorization.domain.dto.authorization.RedisOAuth2AuthorizationGrantAuthorization
 import com.origincoding.authorization.repository.RedisOAuth2AuthorizationGrantAuthorizationRepository
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames

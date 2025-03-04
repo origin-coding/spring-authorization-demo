@@ -1,4 +1,7 @@
-package com.origincoding.authorization.domain.dto
+package com.origincoding.authorization.domain.dto.authorization
+
+import com.origincoding.authorization.domain.dto.token.AccessToken
+import com.origincoding.authorization.domain.dto.token.RefreshToken
 
 open class RedisOAuth2ClientCredentialsGrantAuthorization(
     id: String,

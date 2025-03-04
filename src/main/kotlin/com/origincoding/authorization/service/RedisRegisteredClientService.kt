@@ -2,6 +2,7 @@ package com.origincoding.authorization.service
 
 import com.origincoding.authorization.converter.toRedisRegisteredClient
 import com.origincoding.authorization.converter.toRegisteredClient
+import com.origincoding.authorization.domain.dto.PASSWORD_GRANT_TYPE
 import com.origincoding.authorization.repository.RedisRegisteredClientRepository
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.oauth2.core.AuthorizationGrantType
@@ -10,6 +11,8 @@ import org.springframework.security.oauth2.core.oidc.OidcScopes
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
+import org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings
 import org.springframework.stereotype.Service
 import org.springframework.util.Assert
 import java.util.*
@@ -27,9 +30,11 @@ class RedisRegisteredClientService(
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+            .authorizationGrantType(PASSWORD_GRANT_TYPE)
             .redirectUri("http://127.0.0.1:8080/login/oauth2/code/oidc-client")
             .postLogoutRedirectUri("http://127.0.0.1:8080/").scope(OidcScopes.OPENID).scope(OidcScopes.PROFILE)
             .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
+            .tokenSettings(TokenSettings.builder().accessTokenFormat(OAuth2TokenFormat.REFERENCE).build())
             .build()
 
         // 如果有客户端，那么就不添加

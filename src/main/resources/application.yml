@@ -9,3 +9,8 @@ spring:
       host: localhost
       port: 6379
       database: 15
+
+security:
+  rsa:
+    public-key-path: cert/public_key.pem
+    private-key-path: cert/private_key.pem

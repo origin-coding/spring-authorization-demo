@@ -1,9 +1,11 @@
-package com.origincoding.authorization.domain.dto
+package com.origincoding.authorization.domain.dto.authorization
 
+import com.origincoding.authorization.domain.dto.token.AccessToken
+import com.origincoding.authorization.domain.dto.token.AuthorizationCode
+import com.origincoding.authorization.domain.dto.token.RefreshToken
 import org.springframework.data.redis.core.index.Indexed
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest
 import java.security.Principal
-import java.time.Instant
 
 open class RedisOAuth2AuthorizationCodeGrantAuthorization(
     id: String,
@@ -23,12 +25,4 @@ open class RedisOAuth2AuthorizationCodeGrantAuthorization(
     authorizedScopes,
     accessToken,
     refreshToken
-) {
-
-    class AuthorizationCode(
-        tokenValue: String,
-        issuedAt: Instant?,
-        expiresAt: Instant?,
-        invalidated: Boolean
-    ) : AbstractToken(tokenValue, issuedAt, expiresAt, invalidated)
-}
+)

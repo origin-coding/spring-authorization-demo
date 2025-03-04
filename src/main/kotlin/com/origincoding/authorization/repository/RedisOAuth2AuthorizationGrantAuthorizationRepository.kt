@@ -1,8 +1,8 @@
 package com.origincoding.authorization.repository
 
-import com.origincoding.authorization.domain.dto.RedisOAuth2AuthorizationCodeGrantAuthorization
-import com.origincoding.authorization.domain.dto.RedisOAuth2AuthorizationGrantAuthorization
-import com.origincoding.authorization.domain.dto.RedisOidcAuthorizationCodeGrantAuthorization
+import com.origincoding.authorization.domain.dto.authorization.RedisOAuth2AuthorizationCodeGrantAuthorization
+import com.origincoding.authorization.domain.dto.authorization.RedisOAuth2AuthorizationGrantAuthorization
+import com.origincoding.authorization.domain.dto.authorization.RedisOidcAuthorizationCodeGrantAuthorization
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 
